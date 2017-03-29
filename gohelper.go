@@ -1,10 +1,10 @@
 package gohelper
 
 import (
-	"os"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 )
 
 type RelationshipQuery struct {
@@ -54,11 +54,16 @@ type PlatformInfo struct {
 	Port            string
 }
 
-func NewPlatformInfo() *PlatformInfo {
+func NewPlatformInfo() (*PlatformInfo, error) {
 	p := &PlatformInfo{}
 
 	// Extract the complex environment variables (serialized JSON strings).
-	p.Relationships = getPlatformshRelationships()
+	rels, err := getPlatformshRelationships()
+	if err == nil {
+		return nil, err
+	}
+
+	p.Relationships = rels
 
 	// Extract the easy stuff.
 	p.ApplicationName = os.Getenv("PLATFORM_APPLICATION_NAME")
@@ -72,10 +77,10 @@ func NewPlatformInfo() *PlatformInfo {
 	p.Socket = os.Getenv("SOCKET")
 	p.Port = os.Getenv("PORT")
 
-	return p
+	return p, nil
 }
 
-func getPlatformshRelationships() Relationships {
+func getPlatformshRelationships() (Relationships, error) {
 
 	relationships := os.Getenv("PLATFORM_RELATIONSHIPS")
 
@@ -88,8 +93,8 @@ func getPlatformshRelationships() Relationships {
 	var rels Relationships
 
 	err := json.Unmarshal([]byte(jsonRelationships), &rels)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		return nil, err
 	}
 
 	//fmt.Printf("%+v\n", rels)
@@ -97,5 +102,5 @@ func getPlatformshRelationships() Relationships {
 
 	//fmt.Println(rels["mysql"][0].Host)
 
-	return rels
+	return rels, nil
 }
