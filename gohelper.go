@@ -2,7 +2,6 @@ package gohelper
 
 import (
 	"os"
-	"strconv"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -52,7 +51,7 @@ type PlatformInfo struct {
 	Project         string
 	Entropy         string
 	Socket          string
-	Port            int
+	Port            string
 }
 
 func NewPlatformInfo() *PlatformInfo {
@@ -71,7 +70,7 @@ func NewPlatformInfo() *PlatformInfo {
 	p.Project = os.Getenv("PLATFORM_PROJECT")
 	p.Entropy = os.Getenv("PLATFORM_PROJECT_ENTROPY")
 	p.Socket = os.Getenv("SOCKET")
-	p.Port, _ = strconv.Atoi(os.Getenv("PORT"))
+	p.Port = os.Getenv("PORT")
 
 	return p
 }
