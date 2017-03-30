@@ -59,7 +59,7 @@ func NewPlatformInfo() (*PlatformInfo, error) {
 
 	// Extract the complex environment variables (serialized JSON strings).
 	rels, err := getPlatformshRelationships()
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -92,10 +92,15 @@ func getPlatformshRelationships() (Relationships, error) {
 
 	var rels Relationships
 
+	//fmt.Println("A")
+
 	err := json.Unmarshal([]byte(jsonRelationships), &rels)
-	if err == nil {
+	if err != nil {
+		//fmt.Println("B")
 		return nil, err
 	}
+
+	//fmt.Println("C")
 
 	//fmt.Printf("%+v\n", rels)
 	//fmt.Printf("%+v\n", rels["mysql"][0])
