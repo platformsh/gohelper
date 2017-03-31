@@ -25,13 +25,14 @@ type Relationships map[string][]Relationship
 
 func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 
-	fmt.Printf("%+v\n", p.Relationships[name])
+	//fmt.Printf("%+v\n", p.Relationships[name])
 
 	if relInfo, ok := p.Relationships[name]; ok {
 
 		if len(relInfo) > 0 {
 			dbInfo := relInfo[0]
 			dbString := fmt.Sprintf("%s:%s@%s:%s/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
+			fmt.Println(dbString)
 			return dbString, nil
 		}
 		return "", fmt.Errorf("No first relationship defined for: %s.", name)
