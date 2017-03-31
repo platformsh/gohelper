@@ -25,6 +25,8 @@ type Relationships map[string][]Relationship
 
 func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 
+	fmt.Printf("%+v\n", p.Relationships)
+
 	if relInfo, ok := p.Relationships[name]; ok {
 
 		if len(relInfo) > 0 {
