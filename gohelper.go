@@ -26,12 +26,13 @@ type Relationships map[string][]Relationship
 func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 
 	if relInfo, ok := p.Relationships[name]; ok {
+
 		if len(relInfo) > 0 {
-			return "", fmt.Errorf("No such relationship defined: %s.", name)
+			dbInfo := relInfo[0]
+			dbString := fmt.Sprintf("%s:%s@%s:%s/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
+			return dbString, nil
 		}
-		dbInfo := relInfo[0]
-		dbString := fmt.Sprintf("%s:%s@%s:%s/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
-		return dbString, nil
+		return "", fmt.Errorf("No first relationship defined for: %s.", name)
 	}
 
 	return "", fmt.Errorf("No such relationship defined: %s.", name)
