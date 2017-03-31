@@ -31,7 +31,7 @@ func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 
 		if len(relInfo) > 0 {
 			dbInfo := relInfo[0]
-			dbString := fmt.Sprintf("%s:%s@%s:%s/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
+			dbString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
 			fmt.Println(dbString)
 			return dbString, nil
 		}
