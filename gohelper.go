@@ -1,3 +1,7 @@
+// The gohelper library provides abstractions for the Platform.sh environment
+// to make it easier to configure applications to run on Platform.sh.
+// See https://docs.platform.sh/development/variables.html for an in-depth
+// description of the available properties and their meaning.
 package gohelper
 
 import (
@@ -7,10 +11,6 @@ import (
 	"os"
 )
 
-type RelationshipQuery struct {
-	IsMaster bool `json:"is_master"`
-}
-
 type Relationship struct {
 	Host     string `json:"host"`
 	Username string `json:"username"`
@@ -19,27 +19,11 @@ type Relationship struct {
 	Path     string `json:"path"`
 	Scheme   string `json:"scheme"`
 	Port     int    `json:"port"`
-	Query    RelationshipQuery
+	Query    struct {
+		IsMaster bool `json:"is_master"`
+	}
 }
 type Relationships map[string][]Relationship
-
-func (p *PlatformInfo) SqlDsn(name string) (string, error) {
-
-	fmt.Printf("%+v\n", p.Relationships[name])
-
-	if relInfo, ok := p.Relationships[name]; ok {
-
-		if len(relInfo) > 0 {
-			dbInfo := relInfo[0]
-			dbString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
-			fmt.Println(dbString)
-			return dbString, nil
-		}
-		return "", fmt.Errorf("No first relationship defined for: %s.", name)
-	}
-
-	return "", fmt.Errorf("No such relationship defined: %s.", name)
-}
 
 type PlatformInfo struct {
 	Relationships Relationships
@@ -58,6 +42,11 @@ type PlatformInfo struct {
 	Port            string
 }
 
+// NewPlatformInfo returns a struct containing environment information
+// for th current Platform.sh environment. That includes the port on
+// which to listen for web requests, database credentials, and so on.
+// If that information is not available due to being called when not
+// running on Platform.sh an error will be returned.
 func NewPlatformInfo() (*PlatformInfo, error) {
 	p := &PlatformInfo{}
 
@@ -66,7 +55,6 @@ func NewPlatformInfo() (*PlatformInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	p.Relationships = rels
 
 	// Extract the easy stuff.
@@ -84,32 +72,33 @@ func NewPlatformInfo() (*PlatformInfo, error) {
 	return p, nil
 }
 
+// SqlDsn produces an SQL connection string appropriate for use with many
+// common Go database tools.  If the relationship specified is not found
+// or is not an SQL connection an error will be returned.
+func (p *PlatformInfo) SqlDsn(name string) (string, error) {
+	if relInfo, ok := p.Relationships[name]; ok {
+		if len(relInfo) > 0 {
+			dbInfo := relInfo[0]
+			dbString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
+			return dbString, nil
+		}
+		return "", fmt.Errorf("No first relationship defined for: %s.", name)
+	}
+
+	return "", fmt.Errorf("No such relationship defined: %s.", name)
+}
+
 func getPlatformshRelationships() (Relationships, error) {
 
 	relationships := os.Getenv("PLATFORM_RELATIONSHIPS")
-
-	//fmt.Println(relationships)
-
 	jsonRelationships, _ := base64.StdEncoding.DecodeString(relationships)
-
-	//fmt.Println(string(sDec))
 
 	var rels Relationships
 
-	//fmt.Println("A")
-
 	err := json.Unmarshal([]byte(jsonRelationships), &rels)
 	if err != nil {
-		//fmt.Println("B")
 		return nil, err
 	}
-
-	//fmt.Println("C")
-
-	//fmt.Printf("%+v\n", rels)
-	//fmt.Printf("%+v\n", rels["mysql"][0])
-
-	//fmt.Println(rels["mysql"][0].Host)
 
 	return rels, nil
 }
