@@ -4,7 +4,7 @@ This is a Go library for accessing the Platform.sh environment.
 
 ## Install
 
-Add a dependency on `github.com/platformsh/gohelper` to your application.  Download it using the vendoring tool of your choice.
+Add a dependency on `github.com/platformsh/gohelper` to your application. We recommend downloading it using Go modules in Go 1.11 and later.
 
 
 ## Usage
