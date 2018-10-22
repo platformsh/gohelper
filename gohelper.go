@@ -43,7 +43,7 @@ type PlatformInfo struct {
 }
 
 // NewPlatformInfo returns a struct containing environment information
-// for th current Platform.sh environment. That includes the port on
+// for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
 // If that information is not available due to being called when not
 // running on Platform.sh an error will be returned.
