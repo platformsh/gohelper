@@ -22,7 +22,7 @@ var mockEnvironmentRuntime envList
 func TestMain(m *testing.M) {
 
 	// Create build time env.
-	mockEnvironmentBuild := loadJsonFile("testdata/ENV.json")
+	mockEnvironmentBuild = loadJsonFile("testdata/ENV.json")
 	mockEnvironmentBuild["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
 	mockEnvironmentBuild["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
 
