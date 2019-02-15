@@ -11,6 +11,12 @@ import (
 	"os"
 )
 
+type Error string
+
+func (e Error) Error() string { return string(e) }
+
+const notValidPlatform = Error("No valid platform found.")
+
 type Relationship struct {
 	Host     string `json:"host"`
 	Username string `json:"username"`
@@ -72,15 +78,10 @@ func NewConfig() (*PlatformConfig, error) {
 	case os.Getenv("SYMFONY_APPLICATION_NAME") != "":
 		p.prefix = "SYMFONY_"
 	default:
-		p.prefix = ""
+		return nil, notValidPlatform
 	}
 
-	// @todo This should either go up into the default, or we should follow the pattern
-	// of the other language libs and have an IsValidPlatform method. TBD.
-	if p.prefix == "" {
-		return nil, fmt.Errorf("No valid platform found.")
-	}
-
+	// Extract the easy environment variables.
 	p.applicationName = os.Getenv(p.prefix + "APPLICATION_NAME")
 	p.appDir = os.Getenv(p.prefix + "APP_DIR")
 	p.documentRoot = os.Getenv(p.prefix + "_DOCUMENT_ROOT")
