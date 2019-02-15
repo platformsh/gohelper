@@ -61,6 +61,42 @@ func TestOnEnterpriseReturnsFalseOnStandard(t *testing.T) {
 	}
 }
 
+func TestOnProductionOnEnterpriseProdReturnsTrue(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{
+		"PLATFORM_MODE":   "enterprise",
+		"PLATFORM_BRANCH": "production",
+	}))
+	ok(t, err)
+
+	assert(t, config.OnProduction(), "OnProduction() returned false when it should be true.")
+}
+
+func TestOnProductionOnEnterpriseStagingReturnsFalse(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{
+		"PLATFORM_MODE":   "enterprise",
+		"PLATFORM_BRANCH": "staging",
+	}))
+	ok(t, err)
+
+	assert(t, !config.OnProduction(), "OnProduction() returned true when it should be false.")
+}
+
+func TestOnProductionOnStandardProdReturnsTrue(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{
+		"PLATFORM_BRANCH": "master",
+	}))
+	ok(t, err)
+
+	assert(t, config.OnProduction(), "OnProduction() returned false when it should be true.")
+}
+
+func TestOnProductionOnStandardStagingReturnsFalse(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}))
+	ok(t, err)
+
+	assert(t, !config.OnProduction(), "OnProduction() returned true when it should be false.")
+}
+
 // This function produces a getter of the same signature as os.Getenv() that
 // always returns an empty string, simulating a non-Platform environment.
 func nonPlatformEnv() func(string) string {

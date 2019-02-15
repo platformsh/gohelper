@@ -136,6 +136,21 @@ func (p *PlatformConfig) OnEnterprise() bool {
 	return p.mode == "enterprise"
 }
 
+func (p *PlatformConfig) OnProduction() bool {
+	if p.InBuild() {
+		return false
+	}
+
+	var prodBranch string
+	if p.OnEnterprise() {
+		prodBranch = "production"
+	} else {
+		prodBranch = "master"
+	}
+
+	return p.branch == prodBranch
+}
+
 // NewPlatformInfo returns a struct containing environment information
 // for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
