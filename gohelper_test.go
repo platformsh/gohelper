@@ -41,7 +41,24 @@ func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 	if config.InBuild() {
 		t.Fail()
 	}
+}
 
+func TestOnEnterpriseReturnsTrueOnEnterprise(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{"PLATFORM_MODE": "enterprise"}))
+	ok(t, err)
+
+	if !config.OnEnterprise() {
+		t.Fail()
+	}
+}
+
+func TestOnEnterpriseReturnsFalseOnStandard(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}))
+	ok(t, err)
+
+	if config.OnEnterprise() {
+		t.Fail()
+	}
 }
 
 // This function produces a getter of the same signature as os.Getenv() that

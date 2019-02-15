@@ -132,6 +132,10 @@ func (p *PlatformConfig) InBuild() bool {
 	return p.environment == ""
 }
 
+func (p *PlatformConfig) OnEnterprise() bool {
+	return p.mode == "enterprise"
+}
+
 // NewPlatformInfo returns a struct containing environment information
 // for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
