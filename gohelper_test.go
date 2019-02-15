@@ -37,6 +37,7 @@ func TestMain(m *testing.M) {
 	mockEnvironmentRuntime = mergeMaps(mockEnvironmentRuntime, runtimeVars)
 
 	//spew.Dump(getKeys(mockEnvironmentBuild))
+	//spew.Dump(mockEnvironmentBuild["PLATFORM_APPLICATION_NAME"])
 	//fmt.Println("-----------------------------")
 	//spew.Dump(getKeys(mockEnvironmentRuntime))
 
@@ -56,10 +57,50 @@ func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 	}
 }
 
+func TestInBuildReturnsTrueInBuild(t *testing.T) {
+	reset := populateBuildEnvironment()
+	defer reset()
+
+	config, err := NewConfig()
+	ok(t, err)
+
+	if !config.InBuild() {
+		t.Fail()
+	}
+}
+
+func TestInBuildReturnsFalseInRumtime(t *testing.T) {
+	reset := populateRuntimeEnvironment()
+	defer reset()
+
+	config, err := NewConfig()
+	ok(t, err)
+
+	if config.InBuild() {
+		t.Fail()
+	}
+
+}
+
 func populateBuildEnvironment() func() {
 	os.Clearenv()
 
 	for k, v := range mockEnvironmentBuild {
+		err := os.Setenv(k, v)
+		if err != nil {
+			panic("Could not set environment variable.")
+		}
+	}
+
+	return func() {
+		os.Clearenv()
+	}
+}
+
+func populateRuntimeEnvironment() func() {
+	os.Clearenv()
+
+	for k, v := range mockEnvironmentRuntime {
 		os.Setenv(k, v)
 	}
 

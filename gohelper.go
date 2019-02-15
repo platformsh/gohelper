@@ -112,6 +112,10 @@ func NewConfig() (*PlatformConfig, error) {
 	return p, nil
 }
 
+func (p *PlatformConfig) InBuild() bool {
+	return p.environment == ""
+}
+
 // NewPlatformInfo returns a struct containing environment information
 // for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
