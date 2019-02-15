@@ -42,6 +42,73 @@ type PlatformInfo struct {
 	Port            string
 }
 
+type PlatformConfig struct {
+	relationships Relationships
+	//Application     ApplicationInfo
+	//Routes          RouteInfo
+	//Variables       map[string]string
+	applicationName string
+	documentRoot    string
+	branch          string
+	treeId          string
+	appDir          string
+	environment     string
+	project         string
+	entropy         string
+	socket          string
+	port            string
+
+	prefix string
+}
+
+func NewConfig() (*PlatformConfig, error) {
+	p := &PlatformConfig{}
+
+	switch {
+	case os.Getenv("PLATFORM_APPLICATION_NAME") != "":
+		p.prefix = "PLATFORM_"
+	case os.Getenv("MAGENTO_APPLICATION_NAME") != "":
+		p.prefix = "MAGENTO_"
+	case os.Getenv("SYMFONY_APPLICATION_NAME") != "":
+		p.prefix = "SYMFONY_"
+	default:
+		p.prefix = ""
+	}
+
+	// @todo This should either go up into the default, or we should follow the pattern
+	// of the other language libs and have an IsValidPlatform method. TBD.
+	if p.prefix == "" {
+		return nil, fmt.Errorf("No valid platform found.")
+	}
+
+	p.applicationName = os.Getenv(p.prefix + "APPLICATION_NAME")
+	p.appDir = os.Getenv(p.prefix + "APP_DIR")
+	p.documentRoot = os.Getenv(p.prefix + "_DOCUMENT_ROOT")
+	p.treeId = os.Getenv(p.prefix + "TREE_ID")
+	p.branch = os.Getenv(p.prefix + "BRANCH")
+	p.environment = os.Getenv(p.prefix + "ENVIRONMENT")
+	p.project = os.Getenv(p.prefix + "PROJECT")
+	p.entropy = os.Getenv(p.prefix + "PROJECT_ENTROPY")
+	p.socket = os.Getenv("SOCKET")
+	p.port = os.Getenv("PORT")
+
+	// Extract the complex environment variables (serialized JSON strings).
+	// @todo Rename this to credentials, at least externally.
+	rels, err := getPlatformshRelationships()
+	if err != nil {
+		return nil, err
+	}
+	p.relationships = rels
+
+	// @todo extract the PLATFORM_VARIABLES array
+
+	// @todo extract PLATFORM_ROUTES
+
+	// @todo extract PLATFORM_APPLICATION (oh dear oh dear)
+
+	return p, nil
+}
+
 // NewPlatformInfo returns a struct containing environment information
 // for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
