@@ -16,7 +16,7 @@ type envList map[string]string
 
 func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 
-	_, err := NewConfigReal(nonPlatformEnv())
+	_, err := NewConfigReal(nonPlatformEnv(), "PLATFORM_")
 
 	if err == nil {
 		t.Fail()
@@ -25,7 +25,7 @@ func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 
 func TestInBuildReturnsTrueInBuild(t *testing.T) {
 
-	config, err := NewConfigReal(buildEnv(envList{}))
+	config, err := NewConfigReal(buildEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	if !config.InBuild() {
@@ -35,7 +35,7 @@ func TestInBuildReturnsTrueInBuild(t *testing.T) {
 
 func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 
-	config, err := NewConfigReal(runtimeEnv(envList{}))
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	if config.InBuild() {
@@ -44,7 +44,7 @@ func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 }
 
 func TestOnEnterpriseReturnsTrueOnEnterprise(t *testing.T) {
-	config, err := NewConfigReal(runtimeEnv(envList{"PLATFORM_MODE": "enterprise"}))
+	config, err := NewConfigReal(runtimeEnv(envList{"PLATFORM_MODE": "enterprise"}), "PLATFORM_")
 	ok(t, err)
 
 	if !config.OnEnterprise() {
@@ -53,7 +53,7 @@ func TestOnEnterpriseReturnsTrueOnEnterprise(t *testing.T) {
 }
 
 func TestOnEnterpriseReturnsFalseOnStandard(t *testing.T) {
-	config, err := NewConfigReal(runtimeEnv(envList{}))
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	if config.OnEnterprise() {
@@ -65,7 +65,7 @@ func TestOnProductionOnEnterpriseProdReturnsTrue(t *testing.T) {
 	config, err := NewConfigReal(runtimeEnv(envList{
 		"PLATFORM_MODE":   "enterprise",
 		"PLATFORM_BRANCH": "production",
-	}))
+	}), "PLATFORM_")
 	ok(t, err)
 
 	assert(t, config.OnProduction(), "OnProduction() returned false when it should be true.")
@@ -75,7 +75,7 @@ func TestOnProductionOnEnterpriseStagingReturnsFalse(t *testing.T) {
 	config, err := NewConfigReal(runtimeEnv(envList{
 		"PLATFORM_MODE":   "enterprise",
 		"PLATFORM_BRANCH": "staging",
-	}))
+	}), "PLATFORM_")
 	ok(t, err)
 
 	assert(t, !config.OnProduction(), "OnProduction() returned true when it should be false.")
@@ -84,21 +84,21 @@ func TestOnProductionOnEnterpriseStagingReturnsFalse(t *testing.T) {
 func TestOnProductionOnStandardProdReturnsTrue(t *testing.T) {
 	config, err := NewConfigReal(runtimeEnv(envList{
 		"PLATFORM_BRANCH": "master",
-	}))
+	}), "PLATFORM_")
 	ok(t, err)
 
 	assert(t, config.OnProduction(), "OnProduction() returned false when it should be true.")
 }
 
 func TestOnProductionOnStandardStagingReturnsFalse(t *testing.T) {
-	config, err := NewConfigReal(runtimeEnv(envList{}))
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	assert(t, !config.OnProduction(), "OnProduction() returned true when it should be false.")
 }
 
 func TestBuildPropertyInBuildExists(t *testing.T) {
-	config, err := NewConfigReal(buildEnv(envList{}))
+	config, err := NewConfigReal(buildEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	equals(t, "/app", config.AppDir())
@@ -109,7 +109,7 @@ func TestBuildPropertyInBuildExists(t *testing.T) {
 }
 
 func TestBuildAndRuntimePropertyInRuntimeExists(t *testing.T) {
-	config, err := NewConfigReal(runtimeEnv(envList{}))
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
 	ok(t, err)
 
 	equals(t, "/app", config.AppDir())

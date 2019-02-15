@@ -77,17 +77,13 @@ type PlatformConfig struct {
 	prefix string
 }
 
-func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
+func NewConfigReal(getter func(string) string, prefix string) (*PlatformConfig, error) {
 	p := &PlatformConfig{}
 
-	switch {
-	case getter("PLATFORM_APPLICATION_NAME") != "":
-		p.prefix = "PLATFORM_"
-	case getter("MAGENTO_APPLICATION_NAME") != "":
-		p.prefix = "MAGENTO_"
-	case getter("SYMFONY_APPLICATION_NAME") != "":
-		p.prefix = "SYMFONY_"
-	default:
+	p.prefix = prefix
+
+	// If it's not a valid platform, bail out now.
+	if getter(prefix+"APPLICATION_NAME") == "" {
 		return nil, notValidPlatform
 	}
 
@@ -125,7 +121,7 @@ func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
 }
 
 func NewConfig() (*PlatformConfig, error) {
-	return NewConfigReal(os.Getenv)
+	return NewConfigReal(os.Getenv, "PLATFORM_")
 }
 
 func (p *PlatformConfig) InBuild() bool {
