@@ -67,31 +67,34 @@ type PlatformConfig struct {
 	prefix string
 }
 
-func NewConfig() (*PlatformConfig, error) {
+// @todo Convert tests to only test NewConfigReal(), and pass in an alternate getter
+// that reads from a pre-build list rather than setting the environment directly.
+
+func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
 	p := &PlatformConfig{}
 
 	switch {
-	case os.Getenv("PLATFORM_APPLICATION_NAME") != "":
+	case getter("PLATFORM_APPLICATION_NAME") != "":
 		p.prefix = "PLATFORM_"
-	case os.Getenv("MAGENTO_APPLICATION_NAME") != "":
+	case getter("MAGENTO_APPLICATION_NAME") != "":
 		p.prefix = "MAGENTO_"
-	case os.Getenv("SYMFONY_APPLICATION_NAME") != "":
+	case getter("SYMFONY_APPLICATION_NAME") != "":
 		p.prefix = "SYMFONY_"
 	default:
 		return nil, notValidPlatform
 	}
 
 	// Extract the easy environment variables.
-	p.applicationName = os.Getenv(p.prefix + "APPLICATION_NAME")
-	p.appDir = os.Getenv(p.prefix + "APP_DIR")
-	p.documentRoot = os.Getenv(p.prefix + "_DOCUMENT_ROOT")
-	p.treeId = os.Getenv(p.prefix + "TREE_ID")
-	p.branch = os.Getenv(p.prefix + "BRANCH")
-	p.environment = os.Getenv(p.prefix + "ENVIRONMENT")
-	p.project = os.Getenv(p.prefix + "PROJECT")
-	p.entropy = os.Getenv(p.prefix + "PROJECT_ENTROPY")
-	p.socket = os.Getenv("SOCKET")
-	p.port = os.Getenv("PORT")
+	p.applicationName = getter(p.prefix + "APPLICATION_NAME")
+	p.appDir = getter(p.prefix + "APP_DIR")
+	p.documentRoot = getter(p.prefix + "_DOCUMENT_ROOT")
+	p.treeId = getter(p.prefix + "TREE_ID")
+	p.branch = getter(p.prefix + "BRANCH")
+	p.environment = getter(p.prefix + "ENVIRONMENT")
+	p.project = getter(p.prefix + "PROJECT")
+	p.entropy = getter(p.prefix + "PROJECT_ENTROPY")
+	p.socket = getter("SOCKET")
+	p.port = getter("PORT")
 
 	// Extract the complex environment variables (serialized JSON strings).
 	// @todo Rename this to credentials, at least externally.
@@ -110,6 +113,10 @@ func NewConfig() (*PlatformConfig, error) {
 	// @todo extract PLATFORM_APPLICATION (oh dear oh dear)
 
 	return p, nil
+}
+
+func NewConfig() (*PlatformConfig, error) {
+	return NewConfigReal(os.Getenv)
 }
 
 func (p *PlatformConfig) InBuild() bool {
