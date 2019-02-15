@@ -3,7 +3,6 @@ package gohelper
 import (
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,42 +14,9 @@ import (
 
 type envList map[string]string
 
-var mockEnvironmentBuild envList
-
-var mockEnvironmentRuntime envList
-
-func TestMain(m *testing.M) {
-
-	// Create build time env.
-	mockEnvironmentBuild = loadJsonFile("testdata/ENV.json")
-	mockEnvironmentBuild["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
-	mockEnvironmentBuild["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
-
-	// Create runtimeVars env.
-	mockEnvironmentRuntime = loadJsonFile("testdata/ENV.json")
-	mockEnvironmentRuntime["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
-	mockEnvironmentRuntime["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
-	mockEnvironmentRuntime["PLATFORM_RELATIONSHIPS"] = encodeJsonFile("testdata/PLATFORM_RELATIONSHIPS.json")
-	mockEnvironmentRuntime["PLATFORM_ROUTES"] = encodeJsonFile("testdata/PLATFORM_ROUTES.json")
-
-	runtimeVars := loadJsonFile("testdata/ENV_runtime.json")
-	mockEnvironmentRuntime = mergeMaps(mockEnvironmentRuntime, runtimeVars)
-
-	//spew.Dump(getKeys(mockEnvironmentBuild))
-	//spew.Dump(mockEnvironmentBuild["PLATFORM_APPLICATION_NAME"])
-	//fmt.Println("-----------------------------")
-	//spew.Dump(getKeys(mockEnvironmentRuntime))
-
-	flag.Parse()
-	exitCode := m.Run()
-
-	os.Exit(exitCode)
-}
-
 func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
-	os.Clearenv()
 
-	_, err := NewConfig()
+	_, err := NewConfigReal(nonPlatformEnv())
 
 	if err == nil {
 		t.Fail()
@@ -58,10 +24,8 @@ func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 }
 
 func TestInBuildReturnsTrueInBuild(t *testing.T) {
-	reset := populateBuildEnvironment()
-	defer reset()
 
-	config, err := NewConfig()
+	config, err := NewConfigReal(buildEnv())
 	ok(t, err)
 
 	if !config.InBuild() {
@@ -70,10 +34,8 @@ func TestInBuildReturnsTrueInBuild(t *testing.T) {
 }
 
 func TestInBuildReturnsFalseInRumtime(t *testing.T) {
-	reset := populateRuntimeEnvironment()
-	defer reset()
 
-	config, err := NewConfig()
+	config, err := NewConfigReal(runtimeEnv())
 	ok(t, err)
 
 	if config.InBuild() {
@@ -82,30 +44,52 @@ func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 
 }
 
-func populateBuildEnvironment() func() {
-	os.Clearenv()
-
-	for k, v := range mockEnvironmentBuild {
-		err := os.Setenv(k, v)
-		if err != nil {
-			panic("Could not set environment variable.")
-		}
-	}
-
-	return func() {
-		os.Clearenv()
+// This function produces a getter of the same signature as os.Getenv() that
+// always returns an empty string, simulating a non-Platform environment.
+func nonPlatformEnv() func(string) string {
+	return func(key string) string {
+		return ""
 	}
 }
 
-func populateRuntimeEnvironment() func() {
-	os.Clearenv()
+// This function produces a getter of the same signature as os.gGetenv()
+// that returns test values to simulate a build environment.
+func buildEnv() func(string) string {
 
-	for k, v := range mockEnvironmentRuntime {
-		os.Setenv(k, v)
+	// Create build time env.
+	env := loadJsonFile("testdata/ENV.json")
+	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
+	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
+
+	return func(key string) string {
+		if val, ok := env[key]; ok {
+			return val
+		} else {
+			return ""
+		}
 	}
+}
 
-	return func() {
-		os.Clearenv()
+// This function produces a getter of the same signature as os.gGetenv()
+// that returns test values to simulate a runtime environment.
+func runtimeEnv() func(string) string {
+
+	// Create runtimeVars env.
+	env := loadJsonFile("testdata/ENV.json")
+	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
+	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
+	env["PLATFORM_RELATIONSHIPS"] = encodeJsonFile("testdata/PLATFORM_RELATIONSHIPS.json")
+	env["PLATFORM_ROUTES"] = encodeJsonFile("testdata/PLATFORM_ROUTES.json")
+
+	runtimeVars := loadJsonFile("testdata/ENV_runtime.json")
+	env = mergeMaps(env, runtimeVars)
+
+	return func(key string) string {
+		if val, ok := env[key]; ok {
+			return val
+		} else {
+			return ""
+		}
 	}
 }
 
