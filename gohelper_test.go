@@ -138,7 +138,6 @@ func TestReadingMissingVariableReturnsDefault(t *testing.T) {
 	equals(t, "default-val", config.Variable("missing", "default-val"))
 }
 
-//public function test_variables_returns_on_platform() : void
 func TestVariablesReturnsMapWithData(t *testing.T) {
 	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
 	ok(t, err)
@@ -146,6 +145,28 @@ func TestVariablesReturnsMapWithData(t *testing.T) {
 	list := config.Variables()
 
 	equals(t, "someval", list["somevar"])
+}
+
+func TestCredentialsForExistingRelationshipReturns(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	creds, err := config.Credentials("database")
+	ok(t, err)
+
+	equals(t, "mysql", creds.Scheme)
+}
+
+//public function test_credentials_missing_relationship_throws() : void
+func TestCredentialsForMissingRelationshipErrrors(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	_, err = config.Credentials("does-not-exist")
+
+	if err == nil {
+		t.Fail()
+	}
 }
 
 // This function produces a getter of the same signature as os.Getenv() that

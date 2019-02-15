@@ -8,6 +8,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	//"github.com/davecgh/go-spew/spew"
+
+	//"fmt"
 	"os"
 )
 
@@ -21,36 +24,27 @@ type envList map[string]string
 
 type envReader func(string) string
 
-type Relationship struct {
-	Host     string `json:"host"`
+type Credential struct {
+	Scheme   string `json:"scheme"`
+	Cluster  string `json:"cluster"`
+	Service  string `json:"service"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Ip       string `json:"ip"`
+	Host     string `json:"host"`
 	Path     string `json:"path"`
-	Scheme   string `json:"scheme"`
+	Public   bool   `json:"public"`
+	Fragment string `json:"fragment"`
+	Ip       string `json:"ip"`
+	Rel      string `json:"rel"`
+	Type     string `json:"type"`
 	Port     int    `json:"port"`
+	Hostname string `json:"hostname"`
 	Query    struct {
 		IsMaster bool `json:"is_master"`
 	}
 }
-type Relationships map[string][]Relationship
 
-type PlatformInfo struct {
-	Relationships Relationships
-	//Application     ApplicationInfo
-	//Routes          RouteInfo
-	//Variables       map[string]string
-	ApplicationName string
-	DocRoot         string
-	Branch          string
-	TreeId          string
-	AppDir          string
-	Environment     string
-	Project         string
-	Entropy         string
-	Socket          string
-	Port            string
-}
+type Credentials map[string][]Credential
 
 type PlatformConfig struct {
 	// Prefixed simple values, build or deploy.
@@ -68,10 +62,10 @@ type PlatformConfig struct {
 	mode         string
 
 	// Prefixed complex values.
-	relationships Relationships
+	credentials Credentials
+	variables   envList
 	//Application     ApplicationInfo
 	//Routes          RouteInfo
-	variables envList
 
 	// Unprefixed simple values.
 	socket string
@@ -106,21 +100,24 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 	p.port = getter("PORT")
 
 	// Extract the complex environment variables (serialized JSON strings).
-	// @todo Rename this to credentials, at least externally.
-	/*
-		rels, err := getPlatformshRelationships()
+
+	// Extract PLATFORM_RELATIONSHIPS, which we'll call credentials since that's what they are.
+	if rels := getter(p.prefix + "RELATIONSHIPS"); rels != "" {
+		creds, err := extractCredentials(rels)
 		if err != nil {
 			return nil, err
 		}
-		p.relationships = rels
-	*/
+		p.credentials = creds
+	}
 
 	// Extract the PLATFORM_VARIABLES array.
-	vars, err := extractVariables(getter, prefix)
-	if err != nil {
-		return nil, err
+	if vars := getter(p.prefix + "VARIABLES"); vars != "" {
+		parsedVars, err := extractVariables(vars)
+		if err != nil {
+			return nil, err
+		}
+		p.variables = parsedVars
 	}
-	p.variables = vars
 
 	// @todo extract PLATFORM_ROUTES
 
@@ -211,39 +208,22 @@ func (p *PlatformConfig) Variables() envList {
 	return p.variables
 }
 
-// NewPlatformInfo returns a struct containing environment information
-// for the current Platform.sh environment. That includes the port on
-// which to listen for web requests, database credentials, and so on.
-// If that information is not available due to being called when not
-// running on Platform.sh an error will be returned.
-func NewPlatformInfo() (*PlatformInfo, error) {
-	p := &PlatformInfo{}
+func (p *PlatformConfig) Credentials(relationship string) (Credential, error) {
 
-	// Extract the complex environment variables (serialized JSON strings).
-	rels, err := getPlatformshRelationships()
-	if err != nil {
-		return nil, err
+	// Non-zero relationship indexes are not currently used, so hard code 0 for now.
+	// On the off chance that ever changes, we'll add another method that allows
+	// callers to specify an offset.
+	if creds, ok := p.credentials[relationship]; ok {
+		return creds[0], nil
 	}
-	p.Relationships = rels
 
-	// Extract the easy stuff.
-	p.ApplicationName = os.Getenv("PLATFORM_APPLICATION_NAME")
-	p.AppDir = os.Getenv("PLATFORM_APP_DIR")
-	p.DocRoot = os.Getenv("PLATFORM_DOCUMENT_ROOT")
-	p.TreeId = os.Getenv("PLATFORM_TREE_ID")
-	p.Branch = os.Getenv("PLATFORM_BRANCH")
-	p.Environment = os.Getenv("PLATFORM_ENVIRONMENT")
-	p.Project = os.Getenv("PLATFORM_PROJECT")
-	p.Entropy = os.Getenv("PLATFORM_PROJECT_ENTROPY")
-	p.Socket = os.Getenv("SOCKET")
-	p.Port = os.Getenv("PORT")
-
-	return p, nil
+	return Credential{}, fmt.Errorf("No such relationship: %s", relationship)
 }
 
 // SqlDsn produces an SQL connection string appropriate for use with many
 // common Go database tools.  If the relationship specified is not found
 // or is not an SQL connection an error will be returned.
+/*
 func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 	if relInfo, ok := p.Relationships[name]; ok {
 		if len(relInfo) > 0 {
@@ -256,13 +236,12 @@ func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 
 	return "", fmt.Errorf("No such relationship defined: %s.", name)
 }
+*/
 
-func getPlatformshRelationships() (Relationships, error) {
-
-	relationships := os.Getenv("PLATFORM_RELATIONSHIPS")
+func extractCredentials(relationships string) (Credentials, error) {
 	jsonRelationships, _ := base64.StdEncoding.DecodeString(relationships)
 
-	var rels Relationships
+	var rels Credentials
 
 	err := json.Unmarshal([]byte(jsonRelationships), &rels)
 	if err != nil {
@@ -272,10 +251,7 @@ func getPlatformshRelationships() (Relationships, error) {
 	return rels, nil
 }
 
-func extractVariables(getter envReader, prefix string) (envList, error) {
-
-	vars := getter(prefix + "VARIABLES")
-
+func extractVariables(vars string) (envList, error) {
 	jsonVars, _ := base64.StdEncoding.DecodeString(vars)
 
 	var env envList
