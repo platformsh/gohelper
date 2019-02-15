@@ -97,6 +97,35 @@ func TestOnProductionOnStandardStagingReturnsFalse(t *testing.T) {
 	assert(t, !config.OnProduction(), "OnProduction() returned true when it should be false.")
 }
 
+func TestBuildPropertyInBuildExists(t *testing.T) {
+	config, err := NewConfigReal(buildEnv(envList{}))
+	ok(t, err)
+
+	equals(t, "/app", config.AppDir())
+	equals(t, "app", config.ApplicationName())
+	equals(t, "test-project", config.Project())
+	equals(t, "abc123", config.TreeId())
+	equals(t, "def789", config.Entropy())
+}
+
+func TestBuildAndRuntimePropertyInRuntimeExists(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}))
+	ok(t, err)
+
+	equals(t, "/app", config.AppDir())
+	equals(t, "app", config.ApplicationName())
+	equals(t, "test-project", config.Project())
+	equals(t, "abc123", config.TreeId())
+	equals(t, "def789", config.Entropy())
+
+	equals(t, "feature-x", config.Branch())
+	equals(t, "feature-x-hgi456", config.Environment())
+	equals(t, "/app/web", config.DocumentRoot())
+	equals(t, "1.2.3.4", config.SmtpHost())
+	equals(t, "8080", config.Port())
+	equals(t, "unix://tmp/blah.sock", config.Socket())
+}
+
 // This function produces a getter of the same signature as os.Getenv() that
 // always returns an empty string, simulating a non-Platform environment.
 func nonPlatformEnv() func(string) string {

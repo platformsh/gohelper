@@ -94,7 +94,7 @@ func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
 	// Extract the easy environment variables.
 	p.applicationName = getter(p.prefix + "APPLICATION_NAME")
 	p.appDir = getter(p.prefix + "APP_DIR")
-	p.documentRoot = getter(p.prefix + "_DOCUMENT_ROOT")
+	p.documentRoot = getter(p.prefix + "DOCUMENT_ROOT")
 	p.treeId = getter(p.prefix + "TREE_ID")
 	p.branch = getter(p.prefix + "BRANCH")
 	p.environment = getter(p.prefix + "ENVIRONMENT")
@@ -149,6 +149,50 @@ func (p *PlatformConfig) OnProduction() bool {
 	}
 
 	return p.branch == prodBranch
+}
+
+func (p *PlatformConfig) ApplicationName() string {
+	return p.applicationName
+}
+
+func (p *PlatformConfig) TreeId() string {
+	return p.treeId
+}
+
+func (p *PlatformConfig) AppDir() string {
+	return p.appDir
+}
+
+func (p *PlatformConfig) Project() string {
+	return p.project
+}
+
+func (p *PlatformConfig) Entropy() string {
+	return p.entropy
+}
+
+func (p *PlatformConfig) Branch() string {
+	return p.branch
+}
+
+func (p *PlatformConfig) Environment() string {
+	return p.environment
+}
+
+func (p *PlatformConfig) DocumentRoot() string {
+	return p.documentRoot
+}
+
+func (p *PlatformConfig) SmtpHost() string {
+	return p.smtpHost
+}
+
+func (p *PlatformConfig) Port() string {
+	return p.port
+}
+
+func (p *PlatformConfig) Socket() string {
+	return p.socket
 }
 
 // NewPlatformInfo returns a struct containing environment information
