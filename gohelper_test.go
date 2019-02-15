@@ -75,7 +75,7 @@ func buildEnv(env envList) func(string) string {
 
 	// Create build time env.
 	vars := loadJsonFile("testdata/ENV.json")
-	env = mergeMaps(env, vars)
+	env = mergeMaps(vars, env)
 	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
 	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
 
@@ -94,14 +94,14 @@ func runtimeEnv(env envList) func(string) string {
 
 	// Create runtimeVars env.
 	vars := loadJsonFile("testdata/ENV.json")
-	env = mergeMaps(env, vars)
+	env = mergeMaps(vars, env)
 	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
 	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
 	env["PLATFORM_RELATIONSHIPS"] = encodeJsonFile("testdata/PLATFORM_RELATIONSHIPS.json")
 	env["PLATFORM_ROUTES"] = encodeJsonFile("testdata/PLATFORM_ROUTES.json")
 
-	runtimeVars := loadJsonFile("testdata/ENV_runtime.json")
-	env = mergeMaps(env, runtimeVars)
+	vars = loadJsonFile("testdata/ENV_runtime.json")
+	env = mergeMaps(vars, env)
 
 	return func(key string) string {
 		if val, ok := env[key]; ok {
