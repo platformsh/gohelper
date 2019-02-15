@@ -17,6 +17,10 @@ func (e Error) Error() string { return string(e) }
 
 const notValidPlatform = Error("No valid platform found.")
 
+type envList map[string]string
+
+type envReader func(string) string
+
 type Relationship struct {
 	Host     string `json:"host"`
 	Username string `json:"username"`
@@ -67,7 +71,7 @@ type PlatformConfig struct {
 	relationships Relationships
 	//Application     ApplicationInfo
 	//Routes          RouteInfo
-	//Variables       map[string]string
+	variables envList
 
 	// Unprefixed simple values.
 	socket string
@@ -77,7 +81,7 @@ type PlatformConfig struct {
 	prefix string
 }
 
-func NewConfigReal(getter func(string) string, prefix string) (*PlatformConfig, error) {
+func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 	p := &PlatformConfig{}
 
 	p.prefix = prefix
@@ -111,7 +115,12 @@ func NewConfigReal(getter func(string) string, prefix string) (*PlatformConfig, 
 		p.relationships = rels
 	*/
 
-	// @todo extract the PLATFORM_VARIABLES array
+	// Extract the PLATFORM_VARIABLES array.
+	vars, err := extractVariables(getter, prefix)
+	if err != nil {
+		return nil, err
+	}
+	p.variables = vars
 
 	// @todo extract PLATFORM_ROUTES
 
@@ -191,6 +200,17 @@ func (p *PlatformConfig) Socket() string {
 	return p.socket
 }
 
+func (p *PlatformConfig) Variable(name string, defaultValue string) string {
+	if val, ok := p.variables[name]; ok {
+		return val
+	}
+	return defaultValue
+}
+
+func (p *PlatformConfig) Variables() envList {
+	return p.variables
+}
+
 // NewPlatformInfo returns a struct containing environment information
 // for the current Platform.sh environment. That includes the port on
 // which to listen for web requests, database credentials, and so on.
@@ -250,4 +270,20 @@ func getPlatformshRelationships() (Relationships, error) {
 	}
 
 	return rels, nil
+}
+
+func extractVariables(getter envReader, prefix string) (envList, error) {
+
+	vars := getter(prefix + "VARIABLES")
+
+	jsonVars, _ := base64.StdEncoding.DecodeString(vars)
+
+	var env envList
+
+	err := json.Unmarshal([]byte(jsonVars), &env)
+	if err != nil {
+		return nil, err
+	}
+
+	return env, nil
 }

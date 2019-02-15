@@ -12,8 +12,6 @@ import (
 	"testing"
 )
 
-type envList map[string]string
-
 func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 
 	_, err := NewConfigReal(nonPlatformEnv(), "PLATFORM_")
@@ -124,6 +122,30 @@ func TestBuildAndRuntimePropertyInRuntimeExists(t *testing.T) {
 	equals(t, "1.2.3.4", config.SmtpHost())
 	equals(t, "8080", config.Port())
 	equals(t, "unix://tmp/blah.sock", config.Socket())
+}
+
+func TestReadingExistingVariableWorks(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	equals(t, "someval", config.Variable("somevar", ""))
+}
+
+func TestReadingMissingVariableReturnsDefault(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	equals(t, "default-val", config.Variable("missing", "default-val"))
+}
+
+//public function test_variables_returns_on_platform() : void
+func TestVariablesReturnsMapWithData(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	list := config.Variables()
+
+	equals(t, "someval", list["somevar"])
 }
 
 // This function produces a getter of the same signature as os.Getenv() that
