@@ -100,6 +100,8 @@ func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
 	p.environment = getter(p.prefix + "ENVIRONMENT")
 	p.project = getter(p.prefix + "PROJECT")
 	p.entropy = getter(p.prefix + "PROJECT_ENTROPY")
+	p.smtpHost = getter(p.prefix + "SMTP_HOST")
+	p.mode = getter(p.prefix + "MODE")
 	p.socket = getter("SOCKET")
 	p.port = getter("PORT")
 
