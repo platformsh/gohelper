@@ -49,26 +49,33 @@ type PlatformInfo struct {
 }
 
 type PlatformConfig struct {
+	// Prefixed simple values, build or deploy.
+	applicationName string
+	treeId          string
+	appDir          string
+	project         string
+	entropy         string
+
+	// Prefixed simple values, runtime only.
+	branch       string
+	environment  string
+	documentRoot string
+	smtpHost     string
+	mode         string
+
+	// Prefixed complex values.
 	relationships Relationships
 	//Application     ApplicationInfo
 	//Routes          RouteInfo
 	//Variables       map[string]string
-	applicationName string
-	documentRoot    string
-	branch          string
-	treeId          string
-	appDir          string
-	environment     string
-	project         string
-	entropy         string
-	socket          string
-	port            string
 
+	// Unprefixed simple values.
+	socket string
+	port   string
+
+	// Internal data.
 	prefix string
 }
-
-// @todo Convert tests to only test NewConfigReal(), and pass in an alternate getter
-// that reads from a pre-build list rather than setting the environment directly.
 
 func NewConfigReal(getter func(string) string) (*PlatformConfig, error) {
 	p := &PlatformConfig{}
