@@ -169,6 +169,46 @@ func TestCredentialsForMissingRelationshipErrrors(t *testing.T) {
 	}
 }
 
+func TestGetAllRoutesAtRuntimeWorks(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	routes, err := config.Routes()
+	ok(t, err)
+
+	equals(t, "upstream", routes["https://www.master-7rqtwti-gcpjkefjk4wc2.us-2.platformsh.site/"].Type)
+}
+
+func TestGetAllRoutesAtBuildtimeFails(t *testing.T) {
+	config, err := NewConfigReal(buildEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	_, err = config.Routes()
+
+	if err == nil {
+		t.Fail()
+	}
+}
+
+func TestGetRouteByIdWorks(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	route, ok := config.Route("main")
+
+	equals(t, true, ok)
+	equals(t, "upstream", route.Type)
+}
+
+func TestGetNonExistentRouteErrors(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	_, ok := config.Route("missing")
+
+	equals(t, false, ok)
+}
+
 // This function produces a getter of the same signature as os.Getenv() that
 // always returns an empty string, simulating a non-Platform environment.
 func nonPlatformEnv() func(string) string {

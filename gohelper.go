@@ -8,9 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	//"github.com/davecgh/go-spew/spew"
-
-	//"fmt"
 	"os"
 )
 
@@ -46,6 +43,45 @@ type Credential struct {
 
 type Credentials map[string][]Credential
 
+type Route struct {
+	OriginalUrl    string            `json:"original_url"`
+	Attributes     map[string]string `json:"attributes"`
+	Type           string            `json:"type"`
+	RestrictRobots bool              `json:"restrict_robots"`
+	Tls            struct {
+		ClientAuthentication         string   `json:"client_authentication"`
+		MinVersion                   int      `json:"min_version"`
+		ClientCertificateAuthorities []string `json:"client_certificate_authorities"`
+		StrictTransportSecurity      struct {
+			IncludeSubdomains bool `json:"include_subdomains"`
+			Enabled           bool `json:"enabled"`
+			Preload           bool `json:"preload"`
+		}
+	}
+	Upstream string `json:"upstream"`
+	Cache    struct {
+		Enabled    bool     `json:"enabled"`
+		Headers    []string `json:"headers"`
+		Cookies    []string `json:"cookies"`
+		DefaultTtl int      `json:"default_ttl"`
+	}
+	HttpAccess struct {
+		Addresses []string          `json:"addresses"`
+		BasicAuth map[string]string `json:"basic_auth"`
+	}
+	Primary bool   `json:"primary"`
+	Id      string `json:"id"`
+	Ssi     struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	// This field is not part of the JSON definition, but it gets added
+	// to the struct from the JSON array key.
+	Url string
+}
+
+type Routes map[string]Route
+
 type PlatformConfig struct {
 	// Prefixed simple values, build or deploy.
 	applicationName string
@@ -64,8 +100,8 @@ type PlatformConfig struct {
 	// Prefixed complex values.
 	credentials Credentials
 	variables   envList
+	routes      Routes
 	//Application     ApplicationInfo
-	//Routes          RouteInfo
 
 	// Unprefixed simple values.
 	socket string
@@ -119,7 +155,14 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 		p.variables = parsedVars
 	}
 
-	// @todo extract PLATFORM_ROUTES
+	// Extract PLATFORM_ROUTES.
+	if routes := getter(p.prefix + "ROUTES"); routes != "" {
+		parsedRoutes, err := extractRoutes(routes)
+		if err != nil {
+			return nil, err
+		}
+		p.routes = parsedRoutes
+	}
 
 	// @todo extract PLATFORM_APPLICATION (oh dear oh dear)
 
@@ -220,6 +263,24 @@ func (p *PlatformConfig) Credentials(relationship string) (Credential, error) {
 	return Credential{}, fmt.Errorf("No such relationship: %s", relationship)
 }
 
+func (p *PlatformConfig) Routes() (Routes, error) {
+	if p.InBuild() {
+		return Routes{}, fmt.Errorf("Routes are not available during the build phase.")
+	}
+
+	return p.routes, nil
+}
+
+func (p *PlatformConfig) Route(id string) (Route, bool) {
+	for _, route := range p.routes {
+		if route.Id == id {
+			return route, true
+		}
+	}
+
+	return Route{}, false
+}
+
 // SqlDsn produces an SQL connection string appropriate for use with many
 // common Go database tools.  If the relationship specified is not found
 // or is not an SQL connection an error will be returned.
@@ -262,4 +323,23 @@ func extractVariables(vars string) (envList, error) {
 	}
 
 	return env, nil
+}
+
+func extractRoutes(routesString string) (Routes, error) {
+	jsonRoutes, _ := base64.StdEncoding.DecodeString(routesString)
+
+	var routes Routes
+
+	err := json.Unmarshal([]byte(jsonRoutes), &routes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Normalize the URL of each route into the struct, so that it's available
+	// when requesting a route individually.
+	for url, route := range routes {
+		route.Url = url
+	}
+
+	return routes, nil
 }
