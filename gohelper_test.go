@@ -25,7 +25,7 @@ func TestNotOnPlatformReturnsCorrectly(t *testing.T) {
 
 func TestInBuildReturnsTrueInBuild(t *testing.T) {
 
-	config, err := NewConfigReal(buildEnv())
+	config, err := NewConfigReal(buildEnv(envList{}))
 	ok(t, err)
 
 	if !config.InBuild() {
@@ -35,7 +35,7 @@ func TestInBuildReturnsTrueInBuild(t *testing.T) {
 
 func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 
-	config, err := NewConfigReal(runtimeEnv())
+	config, err := NewConfigReal(runtimeEnv(envList{}))
 	ok(t, err)
 
 	if config.InBuild() {
@@ -54,10 +54,11 @@ func nonPlatformEnv() func(string) string {
 
 // This function produces a getter of the same signature as os.gGetenv()
 // that returns test values to simulate a build environment.
-func buildEnv() func(string) string {
+func buildEnv(env envList) func(string) string {
 
 	// Create build time env.
-	env := loadJsonFile("testdata/ENV.json")
+	vars := loadJsonFile("testdata/ENV.json")
+	env = mergeMaps(env, vars)
 	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
 	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
 
@@ -72,10 +73,11 @@ func buildEnv() func(string) string {
 
 // This function produces a getter of the same signature as os.gGetenv()
 // that returns test values to simulate a runtime environment.
-func runtimeEnv() func(string) string {
+func runtimeEnv(env envList) func(string) string {
 
 	// Create runtimeVars env.
-	env := loadJsonFile("testdata/ENV.json")
+	vars := loadJsonFile("testdata/ENV.json")
+	env = mergeMaps(env, vars)
 	env["PLATFORM_VARIABLES"] = encodeJsonFile("testdata/PLATFORM_VARIABLES.json")
 	env["PLATFORM_APPLICATION"] = encodeJsonFile("testdata/PLATFORM_APPLICATION.json")
 	env["PLATFORM_RELATIONSHIPS"] = encodeJsonFile("testdata/PLATFORM_RELATIONSHIPS.json")
