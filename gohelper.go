@@ -95,11 +95,13 @@ func NewConfig() (*PlatformConfig, error) {
 
 	// Extract the complex environment variables (serialized JSON strings).
 	// @todo Rename this to credentials, at least externally.
-	rels, err := getPlatformshRelationships()
-	if err != nil {
-		return nil, err
-	}
-	p.relationships = rels
+	/*
+		rels, err := getPlatformshRelationships()
+		if err != nil {
+			return nil, err
+		}
+		p.relationships = rels
+	*/
 
 	// @todo extract the PLATFORM_VARIABLES array
 
