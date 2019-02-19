@@ -184,18 +184,26 @@ func NewConfig() (*PlatformConfig, error) {
 	return NewConfigReal(os.Getenv, "PLATFORM_")
 }
 
+// Checks whether the code is running in a build environment.
 func (p *PlatformConfig) InBuild() bool {
 	return p.environment == ""
 }
 
+// Checks whether the code is running in a runtime environment.
 func (p *PlatformConfig) InRuntime() bool {
 	return p.environment != ""
 }
 
+// Determines if the current environment is a Platform.sh Enterprise environment.
 func (p *PlatformConfig) OnEnterprise() bool {
 	return p.mode == "enterprise"
 }
 
+// Determines if the current environment is a production environment.
+//
+// Note: There may be a few edge cases where this is not entirely correct on Enterprise,
+// if the production branch is not named `production`.  In that case you'll need to use
+// your own logic.
 func (p *PlatformConfig) OnProduction() bool {
 	if !p.InRuntime() {
 		return false
@@ -211,50 +219,69 @@ func (p *PlatformConfig) OnProduction() bool {
 	return p.branch == prodBranch
 }
 
+// The name of the application, as defined in its configuration.
 func (p *PlatformConfig) ApplicationName() string {
 	return p.applicationName
 }
 
+// An ID identifying the application tree before it was built: a unique hash
+// is generated based on the contents of the application's files in the
+// repository.
 func (p *PlatformConfig) TreeId() string {
 	return p.treeId
 }
 
+// The absolute path to the application.
 func (p *PlatformConfig) AppDir() string {
 	return p.appDir
 }
 
+// The project ID.
 func (p *PlatformConfig) Project() string {
 	return p.project
 }
 
+// A random string generated for each project, useful for generating hash keys.
 func (p *PlatformConfig) Entropy() string {
 	return p.entropy
 }
 
+// The Git branch name.
 func (p *PlatformConfig) Branch() string {
 	return p.branch
 }
 
+// The environment ID (usually the Git branch plus a hash).
 func (p *PlatformConfig) Environment() string {
 	return p.environment
 }
 
+// The absolute path to the web root of the application.
 func (p *PlatformConfig) DocumentRoot() string {
 	return p.documentRoot
 }
 
+// The hostname of the Platform.sh default SMTP server (an empty string if
+// emails are disabled on the environment).
 func (p *PlatformConfig) SmtpHost() string {
 	return p.smtpHost
 }
 
+// The TCP port number the application should listen to for incoming requests.
 func (p *PlatformConfig) Port() string {
 	return p.port
 }
 
+// The Unix socket the application should listen to for incoming requests.
 func (p *PlatformConfig) Socket() string {
 	return p.socket
 }
 
+// Returns a variable from the VARIABLES array.
+//
+// Note: variables prefixed with `env:` can be accessed as normal environment variables.
+// This method will return such a variable by the name with the prefix still included.
+// Generally it's better to access those variables directly.
 func (p *PlatformConfig) Variable(name string, defaultValue string) string {
 	if val, ok := p.variables[name]; ok {
 		return val
@@ -262,10 +289,15 @@ func (p *PlatformConfig) Variable(name string, defaultValue string) string {
 	return defaultValue
 }
 
+// Returns the full variables array.
+//
+// If you're looking for a specific variable, the Variable() method is a more robust option.
+// This method is for cases where you want to scan the whole variables list looking for a pattern.
 func (p *PlatformConfig) Variables() envList {
 	return p.variables
 }
 
+// Retrieves the credentials for accessing a relationship.
 func (p *PlatformConfig) Credentials(relationship string) (Credential, error) {
 
 	// Non-zero relationship indexes are not currently used, so hard code 0 for now.
@@ -278,6 +310,8 @@ func (p *PlatformConfig) Credentials(relationship string) (Credential, error) {
 	return Credential{}, fmt.Errorf("No such relationship: %s", relationship)
 }
 
+// Returns the routes definition.
+// This is an slice of Route structs.
 func (p *PlatformConfig) Routes() (Routes, error) {
 	if p.InBuild() {
 		return Routes{}, fmt.Errorf("Routes are not available during the build phase.")
@@ -286,6 +320,10 @@ func (p *PlatformConfig) Routes() (Routes, error) {
 	return p.routes, nil
 }
 
+// Returns a single route definition.
+//
+// Note: If no route ID was specified in routes.yaml then it will not be possible
+// to look up a route by ID.
 func (p *PlatformConfig) Route(id string) (Route, bool) {
 	for _, route := range p.routes {
 		if route.Id == id {
@@ -314,6 +352,7 @@ func (p *PlatformInfo) SqlDsn(name string) (string, error) {
 }
 */
 
+// Map the relationships environment variable string into the appropriate data structure.
 func extractCredentials(relationships string) (Credentials, error) {
 	jsonRelationships, _ := base64.StdEncoding.DecodeString(relationships)
 
@@ -327,6 +366,7 @@ func extractCredentials(relationships string) (Credentials, error) {
 	return rels, nil
 }
 
+// Map the variables environment variable string into the appropriate data structure.
 func extractVariables(vars string) (envList, error) {
 	jsonVars, _ := base64.StdEncoding.DecodeString(vars)
 
@@ -340,6 +380,7 @@ func extractVariables(vars string) (envList, error) {
 	return env, nil
 }
 
+// Map the routes environment variable string into the appropriate data structure.
 func extractRoutes(routesString string) (Routes, error) {
 	jsonRoutes, _ := base64.StdEncoding.DecodeString(routesString)
 
