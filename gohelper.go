@@ -337,20 +337,15 @@ func (p *PlatformConfig) Route(id string) (Route, bool) {
 // SqlDsn produces an SQL connection string appropriate for use with many
 // common Go database tools.  If the relationship specified is not found
 // or is not an SQL connection an error will be returned.
-/*
-func (p *PlatformInfo) SqlDsn(name string) (string, error) {
-	if relInfo, ok := p.Relationships[name]; ok {
-		if len(relInfo) > 0 {
-			dbInfo := relInfo[0]
-			dbString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8", dbInfo.Username, dbInfo.Password, dbInfo.Host, dbInfo.Port, dbInfo.Path)
-			return dbString, nil
-		}
-		return "", fmt.Errorf("No first relationship defined for: %s.", name)
+func (p *PlatformConfig) SqlDsn(name string) (string, error) {
+	creds, err := p.Credentials(name)
+	if err != nil {
+		return "", err
 	}
 
-	return "", fmt.Errorf("No such relationship defined: %s.", name)
+	dbString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8", creds.Username, creds.Password, creds.Host, creds.Port, creds.Path)
+	return dbString, nil
 }
-*/
 
 // Map the relationships environment variable string into the appropriate data structure.
 func extractCredentials(relationships string) (Credentials, error) {

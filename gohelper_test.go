@@ -229,6 +229,17 @@ func TestGetNonExistentRouteErrors(t *testing.T) {
 	equals(t, false, ok)
 }
 
+func TestSqlDsnIsFormattedCorrectly(t *testing.T) {
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	db, err := config.SqlDsn("database")
+	ok(t, err)
+
+	equals(t, "user:@tcp(database.internal:3306)/main?charset=utf8", db)
+
+}
+
 // This function produces a getter of the same signature as os.Getenv() that
 // always returns an empty string, simulating a non-Platform environment.
 func nonPlatformEnv() func(string) string {
