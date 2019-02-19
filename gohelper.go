@@ -169,6 +169,9 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 	return p, nil
 }
 
+// This function returns a new PlatformConfig object, representing
+// the abstracted Platform.sh environment.  If run on not a Platform.sh
+// environment (eg, a local computer) then it will return nil and an error.
 func NewConfig() (*PlatformConfig, error) {
 	return NewConfigReal(os.Getenv, "PLATFORM_")
 }
