@@ -101,7 +101,7 @@ type PlatformConfig struct {
 	credentials Credentials
 	variables   envList
 	routes      Routes
-	application     map[string]interface{}
+	application map[string]interface{}
 
 	// Unprefixed simple values.
 	socket string
