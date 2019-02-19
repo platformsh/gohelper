@@ -101,7 +101,7 @@ type PlatformConfig struct {
 	credentials Credentials
 	variables   envList
 	routes      Routes
-	//Application     ApplicationInfo
+	application     map[string]interface{}
 
 	// Unprefixed simple values.
 	socket string
@@ -164,7 +164,15 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 		p.routes = parsedRoutes
 	}
 
-	// @todo extract PLATFORM_APPLICATION (oh dear oh dear)
+	// Extract PLATFORM_APPLICATION.
+	// @todo Turn this into a proper struct.
+	var parsedApplication map[string]interface{}
+	jsonApplication, _ := base64.StdEncoding.DecodeString(getter(p.prefix + "APPLICATION"))
+	err := json.Unmarshal(jsonApplication, &parsedApplication)
+	if err != nil {
+		return nil, err
+	}
+	p.application = parsedApplication
 
 	return p, nil
 }
