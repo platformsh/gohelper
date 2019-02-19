@@ -10,6 +10,7 @@ Add a dependency on `github.com/platformsh/gohelper` to your application. We rec
 ## Usage
 
 Example:
+
 ```go
 package main
 
@@ -21,7 +22,7 @@ import (
 
 func main() {
 
-	p, err := psh.NewPlatformInfo()
+	p, err := psh.NewConfig()
 
 	if err != nil {
 		panic("Not in a Platform.sh Environment.")
@@ -33,5 +34,5 @@ func main() {
 	})
 
     // Note the Port value used here.
-	http.ListenAndServe(":"+p.Port, nil)
+	http.ListenAndServe(":"+p.Port(), nil)
 }
