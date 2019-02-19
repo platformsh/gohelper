@@ -189,7 +189,7 @@ func (p *PlatformConfig) OnEnterprise() bool {
 }
 
 func (p *PlatformConfig) OnProduction() bool {
-	if p.InBuild() {
+	if !p.InRuntime() {
 		return false
 	}
 
