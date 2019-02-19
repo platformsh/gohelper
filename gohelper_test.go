@@ -41,6 +41,26 @@ func TestInBuildReturnsFalseInRumtime(t *testing.T) {
 	}
 }
 
+func TestInRuntimeReturnsTrueInRuntime(t *testing.T) {
+
+	config, err := NewConfigReal(runtimeEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	if !config.InRuntime() {
+		t.Fail()
+	}
+}
+
+func TestInRuntimeReturnsFalseInBuild(t *testing.T) {
+
+	config, err := NewConfigReal(buildEnv(envList{}), "PLATFORM_")
+	ok(t, err)
+
+	if config.InRuntime() {
+		t.Fail()
+	}
+}
+
 func TestOnEnterpriseReturnsTrueOnEnterprise(t *testing.T) {
 	config, err := NewConfigReal(runtimeEnv(envList{"PLATFORM_MODE": "enterprise"}), "PLATFORM_")
 	ok(t, err)

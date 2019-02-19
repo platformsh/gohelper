@@ -180,6 +180,10 @@ func (p *PlatformConfig) InBuild() bool {
 	return p.environment == ""
 }
 
+func (p *PlatformConfig) InRuntime() bool {
+	return p.environment != ""
+}
+
 func (p *PlatformConfig) OnEnterprise() bool {
 	return p.mode == "enterprise"
 }
