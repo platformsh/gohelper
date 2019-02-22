@@ -7,15 +7,12 @@ package gohelper
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 )
 
-type Error string
-
-func (e Error) Error() string { return string(e) }
-
-const notValidPlatform = Error("No valid platform found.")
+var NotValidPlatform = errors.New("No valid platform found.")
 
 type envList map[string]string
 
@@ -118,7 +115,7 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 
 	// If it's not a valid platform, bail out now.
 	if getter(prefix+"APPLICATION_NAME") == "" {
-		return nil, notValidPlatform
+		return nil, NotValidPlatform
 	}
 
 	// Extract the easy environment variables.
@@ -167,8 +164,11 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 	// Extract PLATFORM_APPLICATION.
 	// @todo Turn this into a proper struct.
 	var parsedApplication map[string]interface{}
-	jsonApplication, _ := base64.StdEncoding.DecodeString(getter(p.prefix + "APPLICATION"))
-	err := json.Unmarshal(jsonApplication, &parsedApplication)
+	jsonApplication, err := base64.StdEncoding.DecodeString(getter(p.prefix + "APPLICATION"))
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(jsonApplication, &parsedApplication)
 	if err != nil {
 		return nil, err
 	}
@@ -349,11 +349,14 @@ func (p *PlatformConfig) SqlDsn(name string) (string, error) {
 
 // Map the relationships environment variable string into the appropriate data structure.
 func extractCredentials(relationships string) (Credentials, error) {
-	jsonRelationships, _ := base64.StdEncoding.DecodeString(relationships)
+	jsonRelationships, err := base64.StdEncoding.DecodeString(relationships)
+	if err != nil {
+		return Credentials{}, err
+	}
 
 	var rels Credentials
 
-	err := json.Unmarshal([]byte(jsonRelationships), &rels)
+	err = json.Unmarshal([]byte(jsonRelationships), &rels)
 	if err != nil {
 		return nil, err
 	}
@@ -363,11 +366,14 @@ func extractCredentials(relationships string) (Credentials, error) {
 
 // Map the variables environment variable string into the appropriate data structure.
 func extractVariables(vars string) (envList, error) {
-	jsonVars, _ := base64.StdEncoding.DecodeString(vars)
+	jsonVars, err := base64.StdEncoding.DecodeString(vars)
+	if err != nil {
+		return envList{}, err
+	}
 
 	var env envList
 
-	err := json.Unmarshal([]byte(jsonVars), &env)
+	err = json.Unmarshal([]byte(jsonVars), &env)
 	if err != nil {
 		return nil, err
 	}
@@ -377,11 +383,14 @@ func extractVariables(vars string) (envList, error) {
 
 // Map the routes environment variable string into the appropriate data structure.
 func extractRoutes(routesString string) (Routes, error) {
-	jsonRoutes, _ := base64.StdEncoding.DecodeString(routesString)
+	jsonRoutes, err := base64.StdEncoding.DecodeString(routesString)
+	if err != nil {
+		return Routes{}, err
+	}
 
 	var routes Routes
 
-	err := json.Unmarshal([]byte(jsonRoutes), &routes)
+	err = json.Unmarshal([]byte(jsonRoutes), &routes)
 	if err != nil {
 		return nil, err
 	}
