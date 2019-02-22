@@ -123,7 +123,7 @@ func TestBuildPropertyInBuildExists(t *testing.T) {
 	equals(t, "app", config.ApplicationName())
 	equals(t, "test-project", config.Project())
 	equals(t, "abc123", config.TreeId())
-	equals(t, "def789", config.Entropy())
+	equals(t, "def789", config.ProjectEntropy())
 }
 
 func TestBuildAndRuntimePropertyInRuntimeExists(t *testing.T) {
@@ -134,7 +134,7 @@ func TestBuildAndRuntimePropertyInRuntimeExists(t *testing.T) {
 	equals(t, "app", config.ApplicationName())
 	equals(t, "test-project", config.Project())
 	equals(t, "abc123", config.TreeId())
-	equals(t, "def789", config.Entropy())
+	equals(t, "def789", config.ProjectEntropy())
 
 	equals(t, "feature-x", config.Branch())
 	equals(t, "feature-x-hgi456", config.Environment())

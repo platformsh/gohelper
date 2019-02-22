@@ -85,7 +85,7 @@ type PlatformConfig struct {
 	treeId          string
 	appDir          string
 	project         string
-	entropy         string
+	projectEntropy  string
 
 	// Prefixed simple values, runtime only.
 	branch       string
@@ -126,7 +126,7 @@ func NewConfigReal(getter envReader, prefix string) (*PlatformConfig, error) {
 	p.branch = getter(p.prefix + "BRANCH")
 	p.environment = getter(p.prefix + "ENVIRONMENT")
 	p.project = getter(p.prefix + "PROJECT")
-	p.entropy = getter(p.prefix + "PROJECT_ENTROPY")
+	p.projectEntropy = getter(p.prefix + "PROJECT_ENTROPY")
 	p.smtpHost = getter(p.prefix + "SMTP_HOST")
 	p.mode = getter(p.prefix + "MODE")
 	p.socket = getter("SOCKET")
@@ -242,8 +242,8 @@ func (p *PlatformConfig) Project() string {
 }
 
 // A random string generated for each project, useful for generating hash keys.
-func (p *PlatformConfig) Entropy() string {
-	return p.entropy
+func (p *PlatformConfig) ProjectEntropy() string {
+	return p.projectEntropy
 }
 
 // The Git branch name.
